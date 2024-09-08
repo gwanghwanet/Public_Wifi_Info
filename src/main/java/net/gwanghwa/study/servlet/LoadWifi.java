@@ -1,9 +1,9 @@
 package net.gwanghwa.study.servlet;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.Type;
 import java.sql.ResultSet;
-import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -22,12 +22,12 @@ import com.google.gson.reflect.TypeToken;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import net.gwanghwa.study.SQLite.CommonDBMSService;
-import net.gwanghwa.study.servlet.dao.LoadWifiInfoDAO;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import net.gwanghwa.study.SQLite.CommonDBMSService;
+import net.gwanghwa.study.servlet.dao.LoadWifiInfoDAO;
 
 /**
  * Servlet implementation class LoadWifi
@@ -50,14 +50,22 @@ public class LoadWifi extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		// TODO Auto-generated method stub
 		int totCnt = getSeoulPublicWifiApi();
-		String html = "";
-		html += "<h1 style=\"text-align: center\">";
-		html += totCnt;
-		html += "개의 WIFI 정보를 정상적으로 저장하였습니다.";
-		html += "</h1> <br>";
-		html += "<div style=\"display: block; text-align: center\"> <a href=\"/\">홈으로 가기</a> <div>";
-		
-		response.getWriter().append(html).append(request.getContextPath());
+//		
+		response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        
+        // JSON 객체 생성
+        JsonObject jsonObject = new JsonObject();
+        jsonObject.addProperty("count", totCnt);
+        
+        // JSON 문자열로 변환
+        Gson gson = new Gson();
+        String jsonRes = gson.toJson(jsonObject);
+        
+        // 응답 출력
+        PrintWriter out = response.getWriter();
+        out.print(jsonRes);
+        out.flush();
 	}
 
 	/**
@@ -120,8 +128,8 @@ public class LoadWifi extends HttpServlet {
 	                Gson gson = new Gson();
 	        	    
 	                // JSON 배열을 List로 변환
-	        	    Type apiRsultListType = new TypeToken<ApiRsult>(){}.getType();
-	        	    ApiRsult apiRsultList = gson.fromJson(strResult, apiRsultListType);
+	        	    Type apiRsultListType = new TypeToken<ApiResult>(){}.getType();
+	        	    ApiResult apiRsultList = gson.fromJson(strResult, apiRsultListType);
 	        	    
 	        		if("INFO-000".compareTo(apiRsultList.code) == 0) {        			
 	        			int arrayCnt = (int)Math.ceil(nTotCnt/(double)unitCnt);
@@ -148,7 +156,7 @@ public class LoadWifi extends HttpServlet {
 					        	    	commonDBMSService.insertWifiInfo(loadWifiInfoDAO);
 					        	    	commonDBMSService.close();
 					        	    	
-					        	    	System.out.println(loadWifiInfoDAO.toString());
+					        	    	//System.out.println(loadWifiInfoDAO.toString());
 									}
 	        		        	}
 							} catch (Exception e) {
@@ -174,7 +182,7 @@ public class LoadWifi extends HttpServlet {
 @Setter
 @Getter
 @ToString
-class ApiRsult {
+class ApiResult {
 	@SerializedName("CODE")
 	String code;
 
