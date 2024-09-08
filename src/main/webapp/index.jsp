@@ -54,6 +54,30 @@
 
             document.getElementById("lat").value = lat;
             document.getElementById("lnt").value = lnt;
+            
+        	
+            var xhr = new XMLHttpRequest(); //XMLHttpRequest 객체 생성
+
+            xhr.open('POST', 'history.do', true); //요청을 보낼 방식, url, 비동기여부 설정
+            xhr.setRequestHeader('Content-Type', 'application/json'); // 요청 헤더 설정
+            
+            //Callback
+            xhr.onreadystatechange = function() {
+            	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
+                    if (xhr.status == 200) {
+                    	//success
+                        var response = JSON.parse(xhr.responseText);
+                        console.debug(response.message);
+                    } else {
+                        //failed
+                    	console.error('Failed to send data.');
+                    }
+            	}
+            };
+
+         	// 전송할 데이터 준비
+            var data = JSON.stringify({ LAT: lat, LNT: lnt }); 
+            xhr.send(data); // 요청 전송
         }
     
         function showError(error) {
@@ -79,11 +103,11 @@
     <p>
         <a href="./">홈</a>
         |
-        <a href="./index.jsp">위치 히스토리 목록</a>
+        <a href="./history.jsp">위치 히스토리 목록</a>
         |
         <a href="./load-wifi.jsp">Open API 와이파이 정보 가져오기</a>
     </p>
-
+    
     <div>
         <label>LAT: </label>
         <input id="lat" value="0.0" />
@@ -94,7 +118,7 @@
     </div>
 
     <form name="getMyLocation" method="post" action="mainProcess.do">
-        <div>
+    	<div>
             <table id="noLocWifiList">
                 <tr>
                     <th>거리(Km)</th>
@@ -115,15 +139,9 @@
                     <th>Y좌표</th>
                     <th>작업일자</th>
                 </tr>
-                <td colspan=17 > 위치 정보를 입력한 후 조회해 주세요. </td>
-                
-                
-            <%
-                // 서블릿 호출
-                String servletPath = "/mainProcess.do";
-                RequestDispatcher dispatcher = request.getRequestDispatcher(servletPath);
-                dispatcher.include(request, response);
-            %>
+                <tr>
+                	<td colspan=17 > 위치 정보를 입력한 후 조회해 주세요. </td>
+                </tr>
             </table>
         </div>
     </form>

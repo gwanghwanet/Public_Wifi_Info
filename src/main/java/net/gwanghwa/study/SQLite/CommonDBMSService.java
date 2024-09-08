@@ -97,7 +97,7 @@ public class CommonDBMSService {
 	
 	public int deleteWifiInfoTB() throws Exception {
 		String sql = "";
-		sql += "DELTE FROM TB_PUBLIC_WIFI_INFO";
+		sql += "DELETE FROM TB_PUBLIC_WIFI_INFO";
 		
 		int ret = stmt.executeUpdate(sql);
 		return ret;
@@ -123,9 +123,50 @@ public class CommonDBMSService {
 		sql += "'" + loadWifiInfoDAO.getLat() + "', ";
 		sql += "'" + loadWifiInfoDAO.getLnt() + "', ";
 		sql += "'" + loadWifiInfoDAO.getWorkDttm() + "'";
-		sql += ")";
+		sql += ");";
 		
 		int ret = stmt.executeUpdate(sql);
 		return ret;
+	}
+
+	public int createLocationHst() throws Exception {
+		String sql = "";
+		sql += "CREATE TABLE \"TB_LOCATION_HST\" (";
+		sql += "	\"SEQ\" INTEGER NULL,";
+		sql += "	\"LAT\" TEXT NULL,";
+		sql += "	\"LNT\" TEXT NULL,";
+		sql += "	\"INQ_DATE\" DATETIME NOT NULL";
+		sql += "	);";
+		
+		int ret = stmt.executeUpdate(sql);
+		return ret;
+	}
+	
+	public int insertLocationHst(String lat, String lnt) throws Exception {
+		String sql = "";
+		sql += "INSERT INTO TB_LOCATION_HST VALUES ";
+		sql	+= "( ";
+		sql += "(SELECT IFNULL(MAX(SEQ), 0)  AS SEQ FROM TB_LOCATION_HST) + 1, ";
+		sql += "'" + lat + "', ";
+		sql += "'" + lnt + "', ";
+		sql += "(SELECT DATETIME('now', 'localtime') AS INQ_DATE)";
+		sql += ");";
+		
+		int ret = stmt.executeUpdate(sql);
+		return ret;
+	}
+	
+	public int deleteLocationHst(String seq) throws Exception {
+		String sql = "";
+		sql += "DELETE FROM TB_PUBLIC_WIFI_INFO ";
+		sql	+= " WHERE SEQ = " + Integer.getInteger(seq);
+		sql += ";";
+		
+		int ret = stmt.executeUpdate(sql);
+		return ret;
+	}
+
+	public void commit() throws Exception {
+		if(conn != null) conn.commit();
 	}
 }
