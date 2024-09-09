@@ -72,14 +72,7 @@ public class history extends HttpServlet {
             }
         }
         String jsonData = stringBuilder.toString();
-        JsonElement jsonElement = JsonParser.parseString(jsonData);
-	    JsonObject jsonObject = jsonElement.getAsJsonObject();
-        
-	    if("insert".compareTo(jsonObject.get("TYPE").getAsString()) == 0) {
-	    	insertLocationHst(jsonObject.get("LAT").getAsString(), jsonObject.get("LNT").getAsString());
-	    } else if("delete".compareTo(jsonObject.get("TYPE").getAsString()) == 0) {
-	    	deleteLocationHst(jsonObject.get("SEQ").getAsInt());
-	    }
+        int ret = insertLocationHst(jsonData);
         
         // 요청 데이터 처리 (여기서는 단순히 로그 출력)
         System.out.println("Received JSON data: " + jsonData);
@@ -88,15 +81,43 @@ public class history extends HttpServlet {
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         PrintWriter out = response.getWriter();
-        out.print("{\"message\":\"Data received successfully\"}");
+        out.print("{\"message\":\"Data received successfully\", " + ret + " }");
         out.flush();
     }
 	
-	private int insertLocationHst(String lat, String lnt) {
+	private List<LocationHstDAO> getLocationHst() {
+		List<LocationHstDAO> list = new ArrayList<LocationHstDAO>();
+		CommonDBMSService commonDBMSService = new CommonDBMSService();
+		
+		try {			
+			commonDBMSService.open();
+			ResultSet rs = commonDBMSService.seleteTB("SELECT * FROM TB_LOCATION_HST");
+			
+			while( rs.next() ) {
+				LocationHstDAO locationHstDAO = new LocationHstDAO();
+				locationHstDAO.setSeq(rs.getInt("seq"));
+				locationHstDAO.setLat(rs.getString("lat"));
+				locationHstDAO.setLnt(rs.getString("lnt"));
+				locationHstDAO.setInqDate(rs.getString("inq_date"));
+				list.add(locationHstDAO);
+			}
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		
+		return list;
+		
+	}
+	
+	private int insertLocationHst(String jsonData) {
 		
 		int ret = 0;
 		
 		CommonDBMSService commonDBMSService = new CommonDBMSService();
+		JsonElement jsonElement = JsonParser.parseString(jsonData);
+	    JsonObject jsonObject = jsonElement.getAsJsonObject();
+	    
 		
 		try {
 			
@@ -112,7 +133,7 @@ public class history extends HttpServlet {
 					}
 	        	}	
 								
-				ret = commonDBMSService.insertLocationHst(lat, lnt);
+				ret = commonDBMSService.insertLocationHst(jsonObject.get("LAT").getAsString(), jsonObject.get("LNT").getAsString());
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -122,57 +143,6 @@ public class history extends HttpServlet {
 		}
 		
 		return ret;
-	}
-	
-	private int deleteLocationHst(int seq) {
-		
-		int ret = 0;
-
-		CommonDBMSService commonDBMSService = new CommonDBMSService();
-		
-		try {
-			if( commonDBMSService.open() ) {
-				ResultSet rs = commonDBMSService.seleteTB("SELECT * FROM TB_LOCATION_HST WHERE SEQ = " + seq + ";");
-				if(rs.next()) {
-					ret = commonDBMSService.deleteLocationHst(seq);
-				}
-				if(rs != null) rs.close();
-			}
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			if(commonDBMSService.open()) commonDBMSService.close();
-		}
-		
-		return ret;
-	}
-	
-	private List<LocationHstDAO> getLocationHst() {
-		List<LocationHstDAO> list = new ArrayList<LocationHstDAO>();
-		CommonDBMSService commonDBMSService = new CommonDBMSService();
-		
-		try {			
-			commonDBMSService.open();
-			ResultSet rs = commonDBMSService.seleteTB("SELECT * FROM TB_LOCATION_HST ORDER BY SEQ DESC;");
-			
-			while( rs.next() ) {
-				LocationHstDAO locationHstDAO = new LocationHstDAO();
-				locationHstDAO.setSeq(rs.getInt("seq"));
-				locationHstDAO.setLat(rs.getString("lat"));
-				locationHstDAO.setLnt(rs.getString("lnt"));
-				locationHstDAO.setInqDate(rs.getString("inq_date"));
-				list.add(locationHstDAO);
-			}
-			
-			if(rs != null) rs.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} 
-		
-		return list;
-		
 	}
 }
 

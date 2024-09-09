@@ -156,17 +156,17 @@ public class CommonDBMSService {
 		return ret;
 	}
 	
-	public int deleteLocationHst(int seq) throws Exception {
+	public int deleteLocationHst(String seq) throws Exception {
 		String sql = "";
-		sql += "DELETE FROM TB_LOCATION_HST ";
-		sql	+= " WHERE SEQ = " + seq;
+		sql += "DELETE FROM TB_PUBLIC_WIFI_INFO ";
+		sql	+= " WHERE SEQ = " + Integer.getInteger(seq);
 		sql += ";";
 		
 		int ret = stmt.executeUpdate(sql);
 		return ret;
 	}
 
-	public void setAutoCommit(boolean bStatus) throws Exception {
-		if(conn != null) conn.setAutoCommit(bStatus);
+	public void commit() throws Exception {
+		if(conn != null) conn.commit();
 	}
 }

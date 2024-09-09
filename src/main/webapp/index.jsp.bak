@@ -76,7 +76,7 @@
             };
 
          	// 전송할 데이터 준비
-            var data = JSON.stringify({ TYPE : 'insert', LAT: lat, LNT: lnt }); 
+            var data = JSON.stringify({ LAT: lat, LNT: lnt }); 
             xhr.send(data); // 요청 전송
         }
     

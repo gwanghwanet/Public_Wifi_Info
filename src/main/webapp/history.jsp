@@ -38,48 +38,88 @@
     </style>
 
 <script type="text/javascript">
-window.onload = function() {
-	//XMLHttpRequest 객체 생성
-    var xhr = new XMLHttpRequest();
+	function getLocHstList() {
+		//XMLHttpRequest 객체 생성
+	    var xhr = new XMLHttpRequest();
 
-    //요청을 보낼 방식, url, 비동기여부 설정
-    xhr.open('GET', 'history.do', true);
+	    //요청을 보낼 방식, url, 비동기여부 설정
+	    xhr.open('GET', 'history.do', true);
 
-    //Callback
-    xhr.onreadystatechange = function() {
-    	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
-            if (xhr.status == 200) {
-            	//success
-                var data = JSON.parse(xhr.responseText);
-            	var responseElement = document.getElementById('locationHst');            	
-            	
-            	// JSON 배열을 순회하면서 리스트 항목 생성
-                data.forEach(item => {
-                	const row = responseElement.createElement('tr');
-                	Object.values(item).forEach(text => {
-                        const td = document.createElement('td');
-                        td.textContent = text;
-                        row.appendChild(td);
-                    });
-                	/*
-                	responseElement.innerHTML += "<tr>";
-                	responseElement.innerHTML += "<td>" + item.seq + "</td>";
-                	responseElement.innerHTML += "<td>" + item.lat + "</td>";
-                	responseElement.innerHTML += "<td>" + item.lnt + "</td>";
-                	responseElement.innerHTML += "<td>" + item.inqDate + "</td>";
-                	responseElement.innerHTML += "<td><button>삭제</button></td>";
-                	responseElement.innerHTML += "</tr>";
-                	*/
-                    //responseElement.appendChild(listItem);
-                });
-            } else {
-                //failed
-            }
-    	}
-    };
+	    //Callback
+	    xhr.onreadystatechange = function() {
+	    	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
+	            if (xhr.status == 200) {
+	            	//success
+                	var responseElements = document.querySelector('#locationHst tbody');
+                	// 초기화
+                    responseElements.innerHTML = '';
 
-    xhr.send(); // 요청 전송
-};
+	                var data = JSON.parse(xhr.responseText);
+                	
+	            	// JSON 배열을 순회하면서 리스트 항목 생성
+	                data.forEach(item => {	                		                	
+	                	const row = document.createElement('tr');
+	                	Object.values(item).forEach(text => {
+	                        const td = document.createElement('td');
+	                        td.textContent = text;
+	                        row.appendChild(td);
+	                    });
+
+	                    const td = document.createElement('td');
+	                	const button = document.createElement('button');
+	                	button.textContent = '삭제';
+	                	button.type = "button";
+	                	button.id = 'Delete' + item.seq; // 버튼에 ID 설정
+	                	
+	                	button.addEventListener('click', deleteLocHst);
+	                    
+	                	td.appendChild(button);
+	                    row.appendChild(td)
+	                	
+	                	// tbody에 새로운 행 추가
+	                    responseElements.appendChild(row);
+	                });
+	            } else {
+	                //failed
+	            	alert('조회 요청을 실패하였습니다.');
+	            }
+	    	}
+	    };
+
+	    xhr.send(); // 요청 전송
+	};
+	
+	function deleteLocHst(event) {
+		var seq = event.target.id.substring("Delete".length);
+		
+		//XMLHttpRequest 객체 생성
+	    var xhr = new XMLHttpRequest();
+
+	    //요청을 보낼 방식, url, 비동기여부 설정
+	    xhr.open('POST', 'history.do', true);
+
+	 	// 요청 헤더 설정
+	    xhr.setRequestHeader('Content-Type', 'application/json');
+	    
+	    //Callback
+	    xhr.onreadystatechange = function() {
+	    	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
+	            if (xhr.status == 200) {
+	            	getLocHstList();
+	            } else {
+	                //failed
+	            	alert('삭제 요청을 실패하였습니다.');
+	            }
+	    	}
+	    };
+
+	 	// 전송할 데이터 준비
+        var data = JSON.stringify({ TYPE : 'delete', SEQ: seq }); 
+	    
+	    xhr.send(data); // 요청 전송
+	};
+
+	window.onload = getLocHstList();
 </script>
 </head>
 <body>
@@ -93,13 +133,17 @@ window.onload = function() {
     </p>
 	<div>
 		<table id="locationHst">
-			<tr>
-				<th>ID</th>
-				<th>X좌표</th>
-				<th>Y좌표</th>
-				<th>조회일자</th>
-				<th>비고</th>
-			</tr>
+			<thead>
+				<tr>
+					<th>ID</th>
+					<th>X좌표</th>
+					<th>Y좌표</th>
+					<th>조회일자</th>
+					<th>비고</th>
+				</tr>
+			</thead>
+			<tbody>
+			</tbody>
 		</table>
 	</div>
 </body>

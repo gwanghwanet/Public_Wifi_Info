@@ -103,7 +103,7 @@ public class LoadWifi extends HttpServlet {
 		int unitCnt = 1000;
 		int nStaIdx = 1;
 		int nEndIdx = 2;
-		int nInserCnt = 0;
+		int nTotCnt = 0;
 		
 		// OkHttpClient 객체 생성
         OkHttpClient client = new OkHttpClient();
@@ -121,7 +121,7 @@ public class LoadWifi extends HttpServlet {
         		jsonElement = JsonParser.parseString(jsonObject.get("TbPublicWifiInfo").toString());
         		if(jsonElement.isJsonObject()) {
 	        	    jsonObject = jsonElement.getAsJsonObject();
-	        	    int nListTotCnt = Integer.parseInt(jsonObject.get("list_total_count").toString());
+	        	    nTotCnt = Integer.parseInt(jsonObject.get("list_total_count").toString());
 	        	    String strResult = jsonObject.get("RESULT").toString();
 	        	    
 	        	    // Gson 인스턴스 생성
@@ -131,15 +131,16 @@ public class LoadWifi extends HttpServlet {
 	        	    Type apiRsultListType = new TypeToken<ApiResult>(){}.getType();
 	        	    ApiResult apiRsultList = gson.fromJson(strResult, apiRsultListType);
 	        	    
-					if ("INFO-000".compareTo(apiRsultList.getCode()) == 0) {
-						int arrayCnt = (int) Math.ceil(nListTotCnt / (double) unitCnt);
+					if ("INFO-000".compareTo(apiRsultList.code) == 0) {
+						int arrayCnt = (int) Math.ceil(nTotCnt / (double) unitCnt);
 						for (int i = 0; i < arrayCnt; i++) {
 							nStaIdx = (unitCnt * i) + 1;
 							nEndIdx = nStaIdx + unitCnt - 1;
-							if (nEndIdx > nListTotCnt)
-								nEndIdx = nListTotCnt;
+							if (nEndIdx > nTotCnt)
+								nEndIdx = nTotCnt;
 
-							System.out.println("[LoadWifi::getSeoulPublicWifiApi] " + requestUrl + nStaIdx + "/" + nEndIdx);
+							System.out.println(
+									"[LoadWifi::getSeoulPublicWifiApi] " + requestUrl + nStaIdx + "/" + nEndIdx);
 							request = new Request.Builder().url(requestUrl + nStaIdx + "/" + nEndIdx).build();
 
 							try {
@@ -155,7 +156,6 @@ public class LoadWifi extends HttpServlet {
 
 										commonDBMSService = new CommonDBMSService();
 										commonDBMSService.open();
-										commonDBMSService.setAutoCommit(false);
 
 										// JSON 배열을 List로 변환
 										for (JsonElement jsonArrayElement : jsonArray) {
@@ -166,14 +166,12 @@ public class LoadWifi extends HttpServlet {
 											try {
 											//System.out.println(loadWifiInfoDAO.toString());
 												commonDBMSService.insertWifiInfo(loadWifiInfoDAO);
-												nInserCnt++;
 											// System.out.println(loadWifiInfoDAO.toString());
 											} catch (Exception e) {
 												System.out.println("[LoadWifi::getSeoulPublicWifiApi] insertWifiInfo ==> " + loadWifiInfoDAO.toString());
 											}
 										}
 
-										commonDBMSService.setAutoCommit(true);
 										commonDBMSService.close();
 									}
 								}
@@ -187,7 +185,7 @@ public class LoadWifi extends HttpServlet {
 							Thread.sleep(100);
 						}
 					} else {
-						System.out.println("API 통신 오류 [" + apiRsultList.getCode() + "] " + apiRsultList.getMessage());
+						System.out.println(apiRsultList.toString());
 					}
         		}
         		
@@ -196,7 +194,7 @@ public class LoadWifi extends HttpServlet {
 			// TODO: handle exception
 		}
         
-        return nInserCnt;
+        return nTotCnt;
 	}
 }
 
