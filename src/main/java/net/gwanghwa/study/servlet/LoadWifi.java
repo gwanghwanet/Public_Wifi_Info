@@ -131,43 +131,62 @@ public class LoadWifi extends HttpServlet {
 	        	    Type apiRsultListType = new TypeToken<ApiResult>(){}.getType();
 	        	    ApiResult apiRsultList = gson.fromJson(strResult, apiRsultListType);
 	        	    
-	        		if("INFO-000".compareTo(apiRsultList.code) == 0) {        			
-	        			int arrayCnt = (int)Math.ceil(nTotCnt/(double)unitCnt);
-	        			for(int i = 0 ; i < arrayCnt ; i++) {
-	        				nStaIdx = i + 1;
-	        				nEndIdx = nStaIdx + unitCnt -1 ;
-	        				if(nEndIdx > nTotCnt) nEndIdx = nTotCnt;
-	        				
-	        				request = new Request.Builder().url(requestUrl + nStaIdx + "/" + nEndIdx).build();
-	        		        try {
-	        		        	response = client.newCall(request).execute();
+					if ("INFO-000".compareTo(apiRsultList.code) == 0) {
+						int arrayCnt = (int) Math.ceil(nTotCnt / (double) unitCnt);
+						for (int i = 0; i < arrayCnt; i++) {
+							nStaIdx = (unitCnt * i) + 1;
+							nEndIdx = nStaIdx + unitCnt - 1;
+							if (nEndIdx > nTotCnt)
+								nEndIdx = nTotCnt;
+
+							System.out.println(
+									"[LoadWifi::getSeoulPublicWifiApi] " + requestUrl + nStaIdx + "/" + nEndIdx);
+							request = new Request.Builder().url(requestUrl + nStaIdx + "/" + nEndIdx).build();
+
+							try {
+								response = client.newCall(request).execute();
 								if (response.isSuccessful()) {
-									JsonArray jsonArray = (JsonArray) jsonObject.get("row");
-					        	    
-					        	    // JSON 배열을 List로 변환
-					        	    for (JsonElement jsonArrayElement : jsonArray) {
-					        	    	JsonObject Obj = (JsonObject) jsonArrayElement;
-					        	    	
-					        	    	gson = new Gson();
-					        	    	LoadWifiInfoDAO loadWifiInfoDAO = gson.fromJson(Obj.toString(), LoadWifiInfoDAO.class);
-					        	    	
-					        	    	commonDBMSService = new CommonDBMSService();
-					        	    	commonDBMSService.open();
-					        	    	commonDBMSService.insertWifiInfo(loadWifiInfoDAO);
-					        	    	commonDBMSService.close();
-					        	    	
-					        	    	//System.out.println(loadWifiInfoDAO.toString());
+					        		resData = response.body().string();
+					        		jsonElement = JsonParser.parseString(resData);
+					        	    jsonObject = jsonElement.getAsJsonObject();
+									jsonElement = JsonParser.parseString(jsonObject.get("TbPublicWifiInfo").toString());
+									if (jsonElement.isJsonObject()) {
+										jsonObject = jsonElement.getAsJsonObject();
+										JsonArray jsonArray = (JsonArray) jsonObject.get("row");
+
+										commonDBMSService = new CommonDBMSService();
+										commonDBMSService.open();
+
+										// JSON 배열을 List로 변환
+										for (JsonElement jsonArrayElement : jsonArray) {
+											JsonObject Obj = (JsonObject) jsonArrayElement;
+
+											gson = new Gson();
+											LoadWifiInfoDAO loadWifiInfoDAO = gson.fromJson(Obj.toString(), LoadWifiInfoDAO.class);
+											try {
+											//System.out.println(loadWifiInfoDAO.toString());
+												commonDBMSService.insertWifiInfo(loadWifiInfoDAO);
+											// System.out.println(loadWifiInfoDAO.toString());
+											} catch (Exception e) {
+												System.out.println("[LoadWifi::getSeoulPublicWifiApi] insertWifiInfo ==> " + loadWifiInfoDAO.toString());
+											}
+										}
+
+										commonDBMSService.close();
 									}
-	        		        	}
+								}
+								response.close();
 							} catch (Exception e) {
 								// TODO: handle exception
-			        			System.out.println(e.getMessage());
-			        			e.getStackTrace();
+								System.out.println(e.getMessage());
+								e.getStackTrace();
 							}
-	        			}
-	        		} else {
-	        			System.out.println(apiRsultList.toString());
-	        		}
+							
+							Thread.sleep(100);
+						}
+					} else {
+						System.out.println(apiRsultList.toString());
+					}
         		}
         		
         	}
