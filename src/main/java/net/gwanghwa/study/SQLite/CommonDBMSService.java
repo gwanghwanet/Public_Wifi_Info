@@ -2,6 +2,7 @@ package net.gwanghwa.study.SQLite;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -54,20 +55,23 @@ public class CommonDBMSService {
 	}
 	
 	public ResultSet seleteTB(String sql) throws Exception {
-		ResultSet resultSet = null;
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
 		
 		try {
-			resultSet = stmt.executeQuery(sql);
+			pstmt = conn.prepareStatement(sql);
+			rs = pstmt.executeQuery();
 		} catch (Exception e) {
 			// TODO: handle exception
-			System.out.println("[commonDBMSService::selectTable] ==> " + e.getMessage());
+			System.out.println("[commonDBMSService::seleteTB] ==> " + e.getMessage());
 			e.getStackTrace();
 			
 			throw e;
+		} finally {
+			//if(pstmt != null) pstmt.close();
 		}
 		
-		
-		return resultSet;
+		return rs;	
 	}
 	
 	public int createWifiInfoTB() throws Exception {
@@ -97,7 +101,7 @@ public class CommonDBMSService {
 	
 	public int deleteWifiInfoTB() throws Exception {
 		String sql = "";
-		sql += "DELETE FROM TB_PUBLIC_WIFI_INFO";
+		sql += "DELETE FROM TB_PUBLIC_WIFI_INFO;";
 		
 		int ret = stmt.executeUpdate(sql);
 		return ret;
@@ -164,6 +168,42 @@ public class CommonDBMSService {
 		
 		int ret = stmt.executeUpdate(sql);
 		return ret;
+	}
+	
+	public ResultSet selectWifiInfoByNear(String lat, String lnt) throws Exception {
+		
+		ResultSet rs = null;
+		PreparedStatement pstmt = null;
+		
+		try {
+			String sql = "";
+			sql += "SELECT\n";
+			sql += "    ROUND(6371 * ACOS(\n";
+			sql += "        COS((? * PI() / 180)) * COS((LAT * PI() / 180)) *\n";
+			sql += "        COS(((LNT - ?) * PI() / 180)) +\n";
+			sql += "        SIN((? * PI() / 180)) * SIN((LAT * PI() / 180))\n";
+			sql += "    ), 4) AS X_SWIFI_DISTANCES,\n";
+			sql += "    PWI.*\n";
+			sql += "FROM TB_PUBLIC_WIFI_INFO PWI\n";
+			sql += "ORDER BY X_SWIFI_DISTANCES\n";
+			sql += "LIMIT 20;";
+			
+			pstmt = conn.prepareStatement(sql);
+			pstmt.setDouble(1, Double.valueOf(lat));
+			pstmt.setDouble(2, Double.valueOf(lnt));
+			pstmt.setDouble(3, Double.valueOf(lat));
+			rs = pstmt.executeQuery();
+		} catch (Exception e) {
+			// TODO: handle exception
+			System.out.println("[commonDBMSService::selectWifiInfoByNear] ==> " + e.getMessage());
+			e.getStackTrace();
+			
+			throw e;
+		} finally {
+			//if(pstmt != null) pstmt.close();
+		}
+		
+		return rs;		
 	}
 
 	public void setAutoCommit(boolean bStatus) throws Exception {

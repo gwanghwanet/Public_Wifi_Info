@@ -81,8 +81,12 @@ public class LoadWifi extends HttpServlet {
         CommonDBMSService commonDBMSService = new CommonDBMSService();
         if( commonDBMSService.open() ) {
         	try {
-        		ResultSet resultSet = commonDBMSService.seleteTB("SELECT * FROM TB_PUBLIC_WIFI_INFO;");
-        		if (resultSet.getRow() > 0 ) commonDBMSService.deleteWifiInfoTB();
+        		ResultSet rs = commonDBMSService.seleteTB("SELECT COUNT(1) FROM TB_PUBLIC_WIFI_INFO;");
+        		if (rs.next()) {
+        			commonDBMSService.deleteWifiInfoTB();
+        		}
+        		
+        		if(!rs.isClosed()) rs.close();
         	} catch (Exception e) {
         		System.out.println("[MainServlet::doGet] Not Table Select " + e.getMessage());
         		try {
