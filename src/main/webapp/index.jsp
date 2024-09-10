@@ -46,38 +46,43 @@
                 alert("Geolocation is not supported by this browser.");
             }
         }
+
+        function insertLocHst() {
+
+	        var lat = document.getElementById("lat").value;
+	        var lnt = document.getElementById("lnt").value;
+	        	    	
+	        var xhr = new XMLHttpRequest(); //XMLHttpRequest 객체 생성
+	
+	        xhr.open('POST', 'history.do', true); //요청을 보낼 방식, url, 비동기여부 설정
+	        xhr.setRequestHeader('Content-Type', 'application/json'); // 요청 헤더 설정
+	        
+	        //Callback
+	        xhr.onreadystatechange = function() {
+	        	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
+	                if (xhr.status == 200) {
+	                	//success
+	                    var response = JSON.parse(xhr.responseText);
+	                    console.debug(response.message);
+	                } else {
+	                    //failed
+	                	console.error('Failed to send data.');
+	                }
+	        	}
+	        };
+	
+	     	// 전송할 데이터 준비
+	        var data = JSON.stringify({ TYPE : 'insert', LAT: lat, LNT: lnt }); 
+	        xhr.send(data); // 요청 전송
+        }
     
         function showPosition(position) {
             // 위치 정보 표시
             const lat = position.coords.latitude;
             const lnt = position.coords.longitude;
-
+            
             document.getElementById("lat").value = lat;
-            document.getElementById("lnt").value = lnt;
-            
-        	
-            var xhr = new XMLHttpRequest(); //XMLHttpRequest 객체 생성
-
-            xhr.open('POST', 'history.do', true); //요청을 보낼 방식, url, 비동기여부 설정
-            xhr.setRequestHeader('Content-Type', 'application/json'); // 요청 헤더 설정
-            
-            //Callback
-            xhr.onreadystatechange = function() {
-            	if (xhr.readyState === XMLHttpRequest.DONE) { // 요청 상태 확인
-                    if (xhr.status == 200) {
-                    	//success
-                        var response = JSON.parse(xhr.responseText);
-                        console.debug(response.message);
-                    } else {
-                        //failed
-                    	console.error('Failed to send data.');
-                    }
-            	}
-            };
-
-         	// 전송할 데이터 준비
-            var data = JSON.stringify({ TYPE : 'insert', LAT: lat, LNT: lnt }); 
-            xhr.send(data); // 요청 전송
+	        document.getElementById("lnt").value = lnt;
         }
     
         function showError(error) {
@@ -114,7 +119,7 @@
         <label>, LNT: </label>
         <input id="lnt" value="0.0" />
         <button onclick="getLocation()">내 위치 가져오기</button>
-        <button>근처 WIFI 정보 보기</button>
+        <button onClick="insertLocHst()">근처 WIFI 정보 보기</button>
     </div>
 
     <form name="getMyLocation" method="post" action="mainProcess.do">
